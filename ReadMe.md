@@ -1,5 +1,5 @@
 # 💫 About Me:
-Highly skilled Linux System Administrator with 2.9 years of experience in designing and implementing solutions that improve system performance, security, and uptime. Proven track record in reducing server deployment time by 50%, improving system reliability by 50%, and passing all compliance audits. Exceptional skills in automation, disaster recovery, and collaborating with cross-functional teams to drive business growth.
+Highly skilled Linux System Administrator with 4 years of experience in designing and implementing solutions that improve system performance, security, and uptime. Proven track record in reducing server deployment time by 50%, improving system reliability by 50%, and passing all compliance audits. Exceptional skills in automation, disaster recovery, and collaborating with cross-functional teams to drive business growth.
 
 
 ## 🌐 Socials:
