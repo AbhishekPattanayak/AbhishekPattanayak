@@ -1,0 +1,191 @@
+Node Health Monitoring Commands Recap:
+◦
+Learned about debugging node health using specific commands.
+◦
+DF command: Prints information about available storage/disk space.
+◦
+free command: Prints the memory status (free memory) of the machine.
+◦
+nproc command: Gives the number of CPUs on the machine. On the example instance, it showed only one CPU. These commands help analyse a node machine's parameters, similar to checking RAM or CPU specs on a laptop or phone.
+◦
+top command: Prints information about currently running processes, tasks running, stopped, sleeping, and running processes, and how much CPU/memory each process is consuming. top helps analyse node status.
+•
+Goal for this Video: To run a custom node script that will detect the node health of a virtual machine. This script could be put into a Git repository and executed to check for suspicious memory or CPU usage. The script will be enhanced stage by stage to understand structured writing and good practices.
+•
+Starting the Node Health Script (node_health.sh):
+◦
+Begin with the shebang (#!) followed by the executable (/bin/bash). Using /bin/bash explicitly is important because /bin/sh might be linked to a different shell like dash on some systems (e.g., Ubuntu), which could cause scripts written in Bash syntax to fail. This is a common interview question.
+◦
+Metadata Information: Always include details about the script using hashtags (#), which are used for comments. Comments are not executable commands but provide information. Metadata should include the author (e.g., Abhishek), date written (e.g., 1st December), prerequisites (if any), purpose (e.g., outputs node health), and version (e.g., V1). Providing metadata helps others understand the script by just looking at the file.
+•
+Writing the Script (Initial Version): Use the previously learned commands (df -h, free -g, nproc) to output parameters. The -h flag for df provides human-readable output. The -g flag for free shows memory in gigabytes.
+•
+Executing the Script and Granting Permissions:
+◦
+Need to grant execute permissions using the chmod command.
+◦
+Example shown uses chmod 777 node_health.sh, granting read, write, and execute permissions to user, group, and others. It's mentioned that in an organization, exact permissions should be granted, and 777 is used here only because it's a trivial script for demonstration.
+◦
+Execute using the dot slash notation ./node_health.sh.
+•
+Improving Script Output:
+◦
+Initial output is hard to read; it's difficult to tell which output belongs to which command.
+◦
+Option 1: Using echo statements: Use the echo command before each command execution to print descriptive text (e.g., echo "Print the disk space"). This makes the output clearer, showing what information is being printed. However, this is not feasible for very large scripts with thousands of commands, as it requires writing many echo statements, and mistakes can occur.
+◦
+Option 2: Using set -x: Use the set -x command at the beginning of the script. This command sets the shell script in debug mode. In debug mode, before executing each command, the script will print the command itself (+ command) and then its output. This is generally considered better than just using echo statements alone. Combining set -x and echo statements is recommended for huge scripts. set -x can be commented out if you don't want the user to see which commands are being executed.
+•
+Finding Processes (ps -ef):
+◦
+On a Linux machine without a graphical user interface, you need commands to find running processes.
+◦
+The ps -ef command lists all processes running on the virtual machine. ps stands for processes, -e selects all processes, and -f provides full-format listing. This command shows system processes and application processes.
+•
+Filtering Output (grep):
+◦
+To find specific processes (e.g., Amazon processes), use the grep command.
+◦
+grep is used to filter output. Out of a large output (like from ps -ef), grep [pattern] will only show lines containing the specified pattern. Example: ps -ef | grep Amazon finds processes related to "Amazon".
+◦
+grep can be used to find specific lines in a file or output, like finding names containing "Sai" or "Harsha" from a list.
+•
+Piping Output (|):
+◦
+The pipe symbol (|) is used to send the output of the first command as input to the second command.
+◦
+Example: command1 | command2. The output of command1 becomes the input for command2.
+◦
+Demonstrated with a simple script test.sh echoing numbers, using dot/test.sh | grep 1 to filter lines containing "1".
+◦
+The command ps -ef | grep Amazon first lists all processes (ps -ef) and then pipes that list to grep, which filters for lines containing "Amazon".
+•
+Retrieving Specific Columns (awk):
+◦
+Sometimes you need only a specific part of the filtered output, like the process ID (PID). PIDs are needed to kill processes or take thread/heap dumps.
+◦
+The awk command (pattern scanning and processing language) is used to filter information from columns.
+◦
+While other commands like cut and trim exist, awk is very powerful and commonly used.
+◦
+awk can retrieve specific columns from output, unlike grep, which gives entire lines.
+◦
+Syntax example: awk '{ print $[column_number] }'. The default delimiter is space.
+◦
+Example: ps -ef | grep Amazon | awk '{ print $2 }'.
+▪
+ps -ef lists all processes.
+▪
+| pipes the output to grep.
+▪
+grep Amazon filters for lines containing "Amazon".
+▪
+| pipes the filtered output to awk.
+▪
+awk '{ print $2 }' processes each line, treating space as a delimiter, and prints the second column, which is the PID.
+◦
+Changing $2 to $1 in the awk command prints the first column, often the user running the process.
+◦
+Another example using a file: grep name [filename] | awk '{ print $4 }' can be used to find a line with "name" and then print the fourth column on that line (e.g., the person's name). grep first identifies the relevant line, then awk extracts the specific field from that line.
+◦
+awk and grep are powerful commands often used in combination.
+•
+Best Practices for Scripts with Pipes:
+◦
+When using pipes in scripts, use set -e and set -o pipefail.
+◦
+set -e: Exits the script immediately if any command fails (returns a non-zero exit status). This prevents the script from continuing execution if an early, critical step fails. This is a good practice to ensure the script errors out at the right time.
+◦
+set -o pipefail: This is needed because set -e alone will not cause the script to exit if a command within a pipe fails, as long as the last command in the pipe succeeds. set -o pipefail ensures that the entire pipe command will return a non-zero exit status if any command in the pipe fails, allowing set -e to then exit the script. This catches failures in earlier stages of a pipeline.
+◦
+These can be written on separate lines (set -e, set -o pipefail) or combined (set -exo pipefail), but splitting them is suggested for easier management and commenting out specific options.
+•
+Finding Errors in Log Files:
+◦
+A common task for DevOps engineers is checking log files when an application fails.
+◦
+Log files can be very large.
+◦
+To find specific information like "error" messages in a log file on the local machine, use cat [logfile] | grep error.
+•
+Retrieving Remote Files (curl, wget):
+◦
+Log files are often stored in external storage platforms (Google Storage, AWS S3, Azure Blob Storage) and not always on the virtual machine.
+◦
+curl command: Used to retrieve information from the internet. You can provide the URL of a log file hosted remotely (e.g., on GitHub or storage). curl [URL] prints the content of the remote file to the terminal. curl can also be used to make API requests (e.g., curl -X GET api.foo.com), similar to tools like Postman or Python's requests module.
+◦
+Combining curl with grep: curl [log_file_URL] | grep error retrieves the remote log content and filters it for "error" messages in one command.
+◦
+wget command: Also retrieves files from the internet but downloads and saves the file locally. Usage: wget [URL].
+◦
+Difference between curl and wget: curl sends the output to the terminal (stdout), allowing direct piping. wget downloads the file to the local disk. If you use wget, you then need a second step (e.g., cat [downloaded_file] | grep error) to process the content. The choice depends on whether you need to save the file or just process its content directly. This difference is an interview question.
+•
+Finding Files (find):
+◦
+The find command searches for files and folders within a specified location.
+◦
+Syntax: find [location] [criteria].
+◦
+Example: find / -name pm.d searches the entire filesystem (/) for a file named pm.d.
+◦
+Need appropriate permissions to search the entire filesystem.
+•
+Switching Users (su, sudo):
+◦
+Permissions are important in Linux.
+◦
+su (switch user): Allows switching to another user (e.g., su username).
+◦
+sudo (substitute user do): Allows a permitted user to execute a command as another user (often root). This is used when you need root privileges for a specific command but don't want to fully switch to the root user.
+◦
+sudo su -: Switches to the root user with the root user's environment. Using sudo before find / -name [filename] allows searching the entire filesystem even if the current user doesn't have default permissions.
+◦
+Using the root user is powerful and can be dangerous (e.g., accidentally deleting important files). It's generally preferred to use personal users or service accounts and sudo for specific privileged tasks.
+•
+Conditional Logic (if/else):
+◦
+Essential for automation scripts.
+◦
+Syntax in shell scripting:
+◦
+Conditions use square brackets []. Variables are referenced with $ (e.g., $a). Comparison operators (e.g., -gt for greater than) are used.
+◦
+Example: Comparing two variables a and b.
+•
+Loops (for):
+◦
+Used to execute actions multiple times or iterate over a list.
+◦
+Syntax in Bash:
+◦
+Example: for i in 1 100; do echo $i; done would iterate with i taking values from the list 1 to 100 and print each value. This automates repetitive tasks like printing many numbers.
+◦
+While other loops (while, until, select) exist, for is commonly used.
+◦
+Syntax might slightly vary between different shells (Bash, Ksh, etc.), but Bash syntax is widely used.
+•
+Trapping Signals (trap):
+◦
+An advanced and tricky command, often an interview question. Used less frequently (e.g., once in 50-100 scripts).
+◦
+Signals are events sent to processes, often initiated by user actions (like keyboard input) or other processes (like kill).
+◦
+Examples of signals:
+▪
+kill -9 [PID] sends a signal to terminate a process forcefully.
+▪
+Pressing Ctrl+C sends an interrupt signal (SIGINT) to the foreground process, usually stopping its execution.
+◦
+trap allows you to intercept a signal and execute a specific command or function instead of the default signal action.
+◦
+Purpose: Prevent a script from being interrupted unexpectedly (e.g., by Ctrl+C) or perform cleanup actions before exiting.
+◦
+Syntax: trap '[command_to_execute]' [signal].
+◦
+Example: trap 'echo "Don''t use Ctrl+C"' SIGINT. This traps the SIGINT signal (sent by Ctrl+C) and, instead of stopping the script, it will print "Don't use Ctrl+C".
+◦
+Example: trap 'rm -rf *' SIGINT. If the script is interrupted by Ctrl+C, this command will delete everything in the current directory. This could be used in a script that modifies data (like populating a database) to clean up incomplete work if interrupted.
+◦
+There are many signals in Linux.
+•
+Future Topics: Mentioned possibility of future videos covering specific commands in depth like curl, SMTP (related to sending notifications, though not fully covered), and trap signal
